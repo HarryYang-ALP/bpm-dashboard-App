@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ALP BPM</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+
+<!-- iOS: 加到主畫面後以全螢幕 App 模式開啟 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ALP BPM">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0a0a0a;
+    overflow: hidden;
+  }
+  #app-frame {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    /* 用 100dvh 而不是 100vh，手機瀏覽器網址列/工具列收合時高度才會正確跟著變 */
+    height: 100dvh;
+    border: none;
+    display: block;
+  }
+  /* 離線或載入失敗時的簡單提示畫面 */
+  #offline-msg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: #fff;
+    font-family: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    text-align: center;
+    padding: 24px;
+  }
+  #offline-msg button {
+    background: #8b7ef0;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<iframe
+  id="app-frame"
+  src="https://bpm-dashboard-arkf4bmr6wbrhpvfgwe7n6.streamlit.app/?embed=true"
+  title="BPM Team Dashboard"
+  allow="clipboard-read; clipboard-write"
+></iframe>
+
+<div id="offline-msg">
+  <div style="font-size:17px;font-weight:700;">目前沒有網路連線</div>
+  <div style="font-size:13.5px;color:#c9c5e0;">Dashboard 需要連線才能載入即時資料</div>
+  <button onclick="location.reload()">重新整理</button>
+</div>
+
+<script>
+  // 註冊 service worker（只快取這個外殼本身，不快取 iframe 裡的 Streamlit 內容）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js').catch(function (err) {
+        console.warn('Service worker 註冊失敗：', err);
+      });
+    });
+  }
+
+  // 簡單判斷離線狀態，離線時顯示提示、隱藏 iframe
+  function updateOnlineStatus() {
+    var frame = document.getElementById('app-frame');
+    var msg = document.getElementById('offline-msg');
+    if (navigator.onLine) {
+      frame.style.display = 'block';
+      msg.style.display = 'none';
+    } else {
+      frame.style.display = 'none';
+      msg.style.display = 'flex';
+    }
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+</script>
+</body>
+</html>
